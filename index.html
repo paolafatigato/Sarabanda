@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎵 LyricSwap – Sarabanda Edition</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080810;
+    --surface: #111122;
+    --card: #161630;
+    --border: #2a2a50;
+    --neon-pink: #ff2d78;
+    --neon-cyan: #00f5d4;
+    --neon-yellow: #ffe600;
+    --neon-purple: #b347ff;
+    --text: #f0f0ff;
+    --text-muted: #8888aa;
+    --radius: 16px;
+    --radius-sm: 8px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    padding: 12px;
+  }
+
+  /* ── Background grid ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,212,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,212,.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Glow blobs ── */
+  .blob {
+    position: fixed; border-radius: 50%;
+    filter: blur(80px); pointer-events: none; z-index: 0; opacity: .35;
+  }
+  .blob-1 { width: 400px; height: 400px; background: var(--neon-pink); top: -100px; right: -100px; }
+  .blob-2 { width: 350px; height: 350px; background: var(--neon-purple); bottom: -80px; left: -80px; }
+  .blob-3 { width: 250px; height: 250px; background: var(--neon-cyan); top: 50%; left: 50%; transform: translate(-50%,-50%); opacity: .15; }
+
+  #app {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 680px;
+  }
+
+  /* ════════════════════ SCREENS ════════════════════ */
+  .screen { display: none; animation: fadeUp .45s ease both; }
+  .screen.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ════════════════════ INTRO ════════════════════ */
+  #intro-screen { text-align: center; padding: 20px 0; }
+
+  .logo-wrap { margin-bottom: 8px; }
+  .logo-icon { font-size: clamp(64px, 15vw, 100px); display: block; animation: pulse 2.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+  .logo-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 14vw, 96px);
+    line-height: .9;
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-yellow), var(--neon-cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    letter-spacing: 2px;
+  }
+
+  .logo-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(10px, 2.5vw, 14px);
+    color: var(--neon-cyan);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    opacity: .85;
+  }
+
+  .intro-desc {
+    margin: 28px auto 32px;
+    max-width: 420px;
+    color: var(--text-muted);
+    font-size: clamp(13px, 3vw, 16px);
+    line-height: 1.7;
+  }
+  .intro-desc strong { color: var(--neon-yellow); }
+
+  .rules-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 0 auto 36px;
+    max-width: 480px;
+  }
+
+  .rule-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .rule-card .rule-icon { font-size: 22px; display: block; margin-bottom: 6px; }
+  .rule-card strong { color: var(--neon-cyan); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 2px; }
+
+  .btn-start {
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
+    border: none; border-radius: 50px;
+    color: #fff; font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 2px;
+    padding: 16px 52px; cursor: pointer;
+    box-shadow: 0 0 30px rgba(255,45,120,.4);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .btn-start:hover { transform: scale(1.05); box-shadow: 0 0 45px rgba(255,45,120,.6); }
+  .btn-start:active { transform: scale(.97); }
+
+  /* ════════════════════ GAME SCREEN ════════════════════ */
+  #game-screen { padding: 4px 0 20px; }
+
+  .game-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap; gap: 10px;
+  }
+
+  .score-badge {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 6px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+  }
+  .score-badge span { color: var(--neon-yellow); font-weight: 700; }
+
+  .progress-wrap { flex: 1; min-width: 120px; max-width: 200px; }
+  .progress-label {
+    font-size: 10px; letter-spacing: 2px; color: var(--text-muted);
+    text-transform: uppercase; margin-bottom: 5px;
+    font-family: 'Space Mono', monospace;
+  }
+  .progress-bar-bg {
+    height: 6px; background: var(--border); border-radius: 10px; overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+    border-radius: 10px; transition: width .4s ease;
+  }
+
+  /* ── Song card ── */
+  .song-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: clamp(18px, 5vw, 32px);
+    margin-bottom: 20px;
+    position: relative; overflow: hidden;
+  }
+  .song-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--neon-pink), var(--neon-cyan), var(--neon-yellow));
+  }
+
+  .card-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--neon-pink); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-label::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .lang-flag {
+    font-size: 18px;
+  }
+
+  .lyrics-text {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(16px, 4vw, 22px);
+    font-weight: 700;
+    line-height: 1.65;
+    color: var(--text);
+    font-style: italic;
+    border-left: 3px solid var(--neon-cyan);
+    padding-left: 18px;
+  }
+
+  .lyrics-text em {
+    display: block;
+    font-size: .85em;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-style: normal;
+  }
+
+  /* ── Timer ── */
+  .timer-section { margin-bottom: 20px; }
+
+  .timer-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+  }
+
+  .timer-icon { font-size: 18px; }
+
+  .timer-circle-wrap {
+    width: 52px; height: 52px; position: relative; flex-shrink: 0;
+  }
+
+  .timer-svg { width: 52px; height: 52px; transform: rotate(-90deg); }
+  .timer-track { fill: none; stroke: var(--border); stroke-width: 4; }
+  .timer-progress {
+    fill: none; stroke: var(--neon-cyan); stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 132;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset .8s linear, stroke .5s;
+  }
+  .timer-number {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700;
+    transform: rotate(0deg);
+  }
+
+  .timer-message {
+    flex: 1;
+    font-size: clamp(13px, 3vw, 15px);
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+  }
+  .timer-message strong { color: var(--neon-cyan); }
+
+  /* ── Input phase ── */
+  #input-phase { }
+
+  .guess-label {
+    font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 8px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .guess-row {
+    display: flex; gap: 10px;
+  }
+
+  .guess-input {
+    flex: 1; background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif; font-size: 16px;
+    outline: none; transition: border-color .2s;
+  }
+  .guess-input:focus { border-color: var(--neon-cyan); }
+  .guess-input::placeholder { color: var(--text-muted); }
+
+  .btn-guess {
+    background: var(--neon-cyan); color: #000;
+    border: none; border-radius: var(--radius-sm);
+    padding: 14px 20px; cursor: pointer;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px;
+    transition: transform .15s, box-shadow .15s;
+    flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(0,245,212,.3);
+  }
+  .btn-guess:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(0,245,212,.5); }
+  .btn-guess:active { transform: scale(.95); }
+
+  .hint-text {
+    margin-top: 10px; font-size: 12px;
+    color: var(--text-muted); font-family: 'Space Mono', monospace;
+  }
+
+  /* ── Multiple choice ── */
+  #choice-phase { display: none; }
+
+  .choice-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--neon-yellow); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .choice-label .blink { animation: blink .8s step-end infinite; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+  .choices-grid {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .choice-btn {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif; font-size: clamp(14px, 3.5vw, 17px); font-weight: 700;
+    cursor: pointer; text-align: left;
+    transition: all .2s; display: flex; align-items: center; gap: 12px;
+  }
+  .choice-btn:hover { border-color: var(--neon-purple); background: rgba(179,71,255,.08); }
+  .choice-btn .choice-letter {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--border); color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700;
+    flex-shrink: 0; transition: all .2s;
+  }
+  .choice-btn:hover .choice-letter { background: var(--neon-purple); color: #fff; }
+  .choice-btn.correct { border-color: var(--neon-cyan); background: rgba(0,245,212,.1); }
+  .choice-btn.correct .choice-letter { background: var(--neon-cyan); color: #000; }
+  .choice-btn.wrong { border-color: var(--neon-pink); background: rgba(255,45,120,.08); opacity: .6; }
+  .choice-btn.wrong .choice-letter { background: var(--neon-pink); color: #fff; }
+  .choice-btn:disabled { cursor: default; }
+
+  /* ── Result ── */
+  #result-section { display: none; }
+
+  .result-banner {
+    border-radius: var(--radius);
+    padding: 18px 24px;
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 14px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 2px;
+  }
+  .result-banner.correct {
+    background: rgba(0,245,212,.12);
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+  }
+  .result-banner.wrong {
+    background: rgba(255,45,120,.1);
+    border: 1px solid var(--neon-pink);
+    color: var(--neon-pink);
+  }
+  .result-banner .result-emoji { font-size: 36px; }
+
+  .song-reveal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: clamp(18px, 5vw, 28px);
+    margin-bottom: 16px;
+  }
+
+  .song-meta {
+    display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;
+    padding-bottom: 16px; border-bottom: 1px solid var(--border);
+  }
+
+  .song-disc {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; flex-shrink: 0;
+    animation: spin 4s linear infinite;
+    box-shadow: 0 0 20px rgba(255,45,120,.4);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .song-title-block { flex: 1; }
+  .song-title-reveal {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(22px, 6vw, 34px); letter-spacing: 1px;
+    line-height: 1; margin-bottom: 4px;
+    background: linear-gradient(135deg, var(--neon-yellow), var(--neon-pink));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .song-artist-reveal {
+    font-size: 14px; color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+  }
+  .song-lang-badge {
+    background: var(--border); border-radius: 50px;
+    padding: 2px 10px; font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    color: var(--neon-cyan); margin-top: 6px; display: inline-block;
+  }
+
+  .original-lyrics-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 10px;
+  }
+
+  .original-lyrics {
+    font-size: clamp(14px, 3.5vw, 17px);
+    line-height: 1.8;
+    color: var(--text);
+    border-left: 3px solid var(--neon-pink);
+    padding-left: 16px;
+    font-style: italic;
+  }
+
+  .btn-next {
+    width: 100%;
+    background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
+    border: none; border-radius: 50px; color: #fff;
+    font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px;
+    padding: 18px; cursor: pointer;
+    box-shadow: 0 0 25px rgba(179,71,255,.4);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .btn-next:hover { transform: scale(1.02); box-shadow: 0 0 40px rgba(179,71,255,.6); }
+
+  /* ════════════════════ END SCREEN ════════════════════ */
+  #end-screen { text-align: center; padding: 20px 0; }
+
+  .end-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 12vw, 84px);
+    line-height: .9;
+    background: linear-gradient(135deg, var(--neon-yellow), var(--neon-pink), var(--neon-cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 8px;
+  }
+
+  .end-score-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 24px;
+    margin: 24px auto;
+    max-width: 380px;
+  }
+
+  .end-score-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 10px;
+  }
+
+  .end-score-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(64px, 15vw, 96px);
+    line-height: 1;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 40px rgba(255,230,0,.5);
+  }
+
+  .end-score-max {
+    font-size: 16px; color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    margin-top: 4px;
+  }
+
+  .end-stars {
+    font-size: 32px; margin: 16px 0 8px; letter-spacing: 4px;
+  }
+
+  .end-message {
+    font-size: 18px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;
+  }
+
+  .end-breakdown {
+    display: flex; justify-content: center; gap: 24px; margin-top: 20px;
+    font-family: 'Space Mono', monospace; font-size: 12px;
+  }
+  .end-stat { text-align: center; }
+  .end-stat .val { display: block; font-size: 28px; font-weight: 700; color: var(--text); }
+  .end-stat .lbl { color: var(--text-muted); font-size: 10px; letter-spacing: 1px; }
+  .stat-correct .val { color: var(--neon-cyan); }
+  .stat-first .val { color: var(--neon-yellow); }
+  .stat-wrong .val { color: var(--neon-pink); }
+
+  .btn-restart {
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-yellow));
+    border: none; border-radius: 50px; color: #000;
+    font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px;
+    padding: 16px 52px; cursor: pointer; margin-top: 12px;
+    box-shadow: 0 0 30px rgba(255,230,0,.3);
+    transition: transform .15s;
+  }
+  .btn-restart:hover { transform: scale(1.05); }
+
+  /* ── Confetti ── */
+  .confetti-piece {
+    position: fixed; width: 8px; height: 12px;
+    pointer-events: none; z-index: 999; border-radius: 2px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 480px) {
+    .rules-grid { grid-template-columns: 1fr; }
+    .guess-row { flex-direction: column; }
+    .btn-guess { padding: 14px; }
+    .end-breakdown { gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<div id="app">
+
+  <!-- ══════════ INTRO ══════════ -->
+  <div id="intro-screen" class="screen active">
+    <div class="logo-wrap">
+      <span class="logo-icon">🎵</span>
+      <div class="logo-title">LyricSwap</div>
+      <div class="logo-sub">Sarabanda Edition &nbsp;·&nbsp; Guess the Song</div>
+    </div>
+
+    <p class="intro-desc">
+      Le parole ci sono, ma la lingua è cambiata! 
+      Riesci a indovinare la canzone dai <strong>testi tradotti</strong>?
+    </p>
+
+    <div class="rules-grid">
+      <div class="rule-card">
+        <span class="rule-icon">📖</span>
+        <strong>Leggi</strong>
+        Appare un estratto di testo tradotto in un'altra lingua
+      </div>
+      <div class="rule-card">
+        <span class="rule-icon">⏱️</span>
+        <strong>Indovina</strong>
+        Scrivi il titolo durante il conto alla rovescia
+      </div>
+      <div class="rule-card">
+        <span class="rule-icon">🎯</span>
+        <strong>Aiuto</strong>
+        Scaduto il tempo? Appaiono 3 opzioni tra cui scegliere
+      </div>
+      <div class="rule-card">
+        <span class="rule-icon">🎤</span>
+        <strong>Scopri</strong>
+        Dopo ogni risposta vedi il testo originale completo
+      </div>
+    </div>
+
+    <button class="btn-start" onclick="startGame()">INIZIA IL GIOCO ▶</button>
+  </div>
+
+  <!-- ══════════ GAME ══════════ -->
+  <div id="game-screen" class="screen">
+
+    <div class="game-header">
+      <div class="score-badge">🏆 Punteggio: <span id="score-display">0</span></div>
+      <div class="progress-wrap">
+        <div class="progress-label">Domanda <span id="q-num">1</span> / <span id="q-total">10</span></div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill" style="width:10%"></div></div>
+      </div>
+    </div>
+
+    <div class="song-card">
+      <div class="card-label">
+        <span class="lang-flag" id="lang-flag">🇬🇧</span>
+        <span id="direction-label">Canzone in Inglese – Indovina il titolo!</span>
+      </div>
+      <div class="lyrics-text" id="lyrics-display">
+        <!-- lyrics here -->
+      </div>
+    </div>
+
+    <!-- Timer -->
+    <div class="timer-section">
+      <div class="timer-row">
+        <div class="timer-circle-wrap">
+          <svg class="timer-svg" viewBox="0 0 52 52">
+            <circle class="timer-track" cx="26" cy="26" r="21"/>
+            <circle class="timer-progress" id="timer-progress-circle" cx="26" cy="26" r="21"/>
+          </svg>
+          <div class="timer-number" id="timer-number">15</div>
+        </div>
+        <div class="timer-message" id="timer-message">
+          <strong>Scrivi il titolo</strong> nel campo qui sotto!
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Phase -->
+    <div id="input-phase">
+      <div class="guess-label">Il tuo tentativo:</div>
+      <div class="guess-row">
+        <input type="text" class="guess-input" id="guess-input" 
+               placeholder="Scrivi il titolo della canzone…"
+               autocomplete="off" autocorrect="off" spellcheck="false">
+        <button class="btn-guess" onclick="checkGuess()">OK ✓</button>
+      </div>
+      <p class="hint-text" id="hint-text">⏳ Hai 15 secondi – poi appaiono 3 opzioni!</p>
+    </div>
+
+    <!-- Choice Phase -->
+    <div id="choice-phase">
+      <div class="choice-label">
+        <span class="blink">●</span>
+        Scegli la risposta giusta:
+      </div>
+      <div class="choices-grid" id="choices-grid">
+        <!-- buttons here -->
+      </div>
+    </div>
+
+    <!-- Result Section -->
+    <div id="result-section">
+      <div class="result-banner" id="result-banner">
+        <span class="result-emoji" id="result-emoji">🎉</span>
+        <span id="result-text">CORRETTO!</span>
+      </div>
+
+      <div class="song-reveal">
+        <div class="song-meta">
+          <div class="song-disc">🎵</div>
+          <div class="song-title-block">
+            <div class="song-title-reveal" id="reveal-title">–</div>
+            <div class="song-artist-reveal" id="reveal-artist">–</div>
+            <div class="song-lang-badge" id="reveal-lang">🇬🇧 English</div>
+          </div>
+        </div>
+        <div class="original-lyrics-label">🎤 Testo originale:</div>
+        <div class="original-lyrics" id="original-lyrics-display">–</div>
+      </div>
+
+      <button class="btn-next" id="btn-next" onclick="nextQuestion()">PROSSIMA CANZONE →</button>
+    </div>
+
+  </div>
+
+  <!-- ══════════ END ══════════ -->
+  <div id="end-screen" class="screen">
+    <div class="end-title">GAME<br>OVER!</div>
+    <div class="end-score-wrap">
+      <div class="end-score-label">Il tuo punteggio finale</div>
+      <div class="end-score-number" id="final-score">0</div>
+      <div class="end-score-max" id="final-max">su 0 punti</div>
+      <div class="end-stars" id="end-stars">⭐⭐⭐</div>
+      <div class="end-message" id="end-message">Ottimo lavoro!</div>
+      <div class="end-breakdown">
+        <div class="end-stat stat-correct">
+          <span class="val" id="stat-correct">0</span>
+          <span class="lbl">Corrette</span>
+        </div>
+        <div class="end-stat stat-first">
+          <span class="val" id="stat-first">0</span>
+          <span class="lbl">Al 1° tentativo</span>
+        </div>
+        <div class="end-stat stat-wrong">
+          <span class="val" id="stat-wrong">0</span>
+          <span class="lbl">Sbagliate</span>
+        </div>
+      </div>
+    </div>
+    <button class="btn-restart" onclick="restartGame()">GIOCA ANCORA 🔄</button>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  SONG DATABASE
+// ══════════════════════════════════════════════
+const ALL_SONGS = [
+  // EN → IT (canzone inglese, testo tradotto in italiano)
+  {
+    id: 1,
+    title: "Flowers",
+    artist: "Miley Cyrus",
+    originalLang: "en",
+    translatedExcerpt: `Posso comprarmi dei fiori,\nscrivere il mio nome sulla sabbia.\nPosso parlare con me stessa per ore,\ndire cose che non capisci.\nPosso portarmi in giro,\nnon ho bisogno di te.\nPosso amarmi meglio di quanto tu abbia mai fatto.`,
+    originalExcerpt: `I can buy myself flowers,\nwrite my name in the sand.\nTalk to myself for hours,\nsay things you don't understand.\nI can take myself dancing\nand I can hold my own hand.\nYeah, I can love me better than you can.`,
+    wrongOptions: ["Anti-Hero", "As It Was", "Levitating"]
+  },
+  {
+    id: 2,
+    title: "Anti-Hero",
+    artist: "Taylor Swift",
+    originalLang: "en",
+    translatedExcerpt: `Ciao, sono io.\nSono il problema, sono io.\nAll'ora del tè tutti concordano:\ndevo essere il problema.\nÈ colpa mia, sì, sono io.\nSono l'eroe negativo.`,
+    originalExcerpt: `It's me, hi!\nI'm the problem, it's me.\nAt tea time everybody agrees,\nI'll stare directly at the sun but never in the mirror.\nIt's me, hi, I'm the problem, it's me.`,
+    wrongOptions: ["Cruel Summer", "Shake It Off", "Blank Space"]
+  },
+  {
+    id: 3,
+    title: "As It Was",
+    artist: "Harry Styles",
+    originalLang: "en",
+    translatedExcerpt: `Rispondi al telefono, Harry, sono a casa.\nNon mi sento mai più sola\ndi quando sei con me.\nNiente di ciò che voglio arriva da ciò di cui ho bisogno.\nLa vita può essere com'era?`,
+    originalExcerpt: `Answer the phone, Harry, I'm at home.\nI don't wanna talk about the way that it was.\nLeave America, two kids follow her.\nIn the kitchen, she's crying.\nBut, nothing's as it was.`,
+    wrongOptions: ["Watermelon Sugar", "Adore You", "Sign of the Times"]
+  },
+  {
+    id: 4,
+    title: "Blinding Lights",
+    artist: "The Weeknd",
+    originalLang: "en",
+    translatedExcerpt: `Sto cercando di chiamarti\nma le luci abbaglianti della città mi accecano.\nNon riesco a dormire stanotte,\nho bisogno di te vicino a me.\nCorro verso di te come un matto.\nSon senza di te, senza di te.`,
+    originalExcerpt: `I've been trying to call\nI've been on my own for long enough.\nMaybe you can show me how to love, maybe.\nI'm going through withdrawals.\nYou don't even have to do too much,\nyou can turn me on with just a touch, baby.`,
+    wrongOptions: ["Save Your Tears", "Starboy", "I Feel It Coming"]
+  },
+  {
+    id: 5,
+    title: "Levitating",
+    artist: "Dua Lipa",
+    originalLang: "en",
+    translatedExcerpt: `Se vuoi che resti per sempre,\nfammi sapere, fammi sapere.\nVa' a prendere la mia mano\ne non lasciarla mai andare.\nSto levitando in aria,\ncon te sono nell'universo.`,
+    originalExcerpt: `If you wanna run away with me,\nI know a galaxy and I can take you for a ride.\nI had a premonition that we fell into a rhythm\nwhere the music don't stop for life.`,
+    wrongOptions: ["Don't Start Now", "Physical", "Break My Heart"]
+  },
+  {
+    id: 6,
+    title: "Cruel Summer",
+    artist: "Taylor Swift",
+    originalLang: "en",
+    translatedExcerpt: `Fever dream alta, non riesci a sopportare\nte ne resti in attesa di un amore che non arriva.\nÈ crudele un'estate stare senza di te.\nUrlo il tuo nome nel vuoto e spero che mi senta.`,
+    originalExcerpt: `Fever dream high in the quiet of the night,\nyou know that I caught it.\n(Oh I caught it)\nBad, bad boy, shiny toy with a price,\nyou know that I bought it.\nIt's a cruel summer with you.`,
+    wrongOptions: ["Love Story", "You Belong With Me", "22"]
+  },
+
+  // IT → EN (canzone italiana, testo tradotto in inglese)
+  {
+    id: 7,
+    title: "Brividi",
+    artist: "Mahmood & Blanco",
+    originalLang: "it",
+    translatedExcerpt: `I'm afraid of loving you\nbecause maybe I'm wrong.\nGive me a shiver, cold as ice,\na shiver that brings you back.\nI'm not able to love you,\nI'm not strong enough for this.\nI stay with you even in the dark.`,
+    originalExcerpt: `Ho paura di amare te\nperché magari sbaglio.\nDammi un brivido, freddo come il ghiaccio,\nun brivido che mi riporti da te.\nNon so amarti senza perdermi,\nnon sono abbastanza forte.\nResto con te anche nel buio.`,
+    wrongOptions: ["Sinceramente", "Supereroi", "Tuta Gold"]
+  },
+  {
+    id: 8,
+    title: "Tuta Gold",
+    artist: "Mahmood",
+    originalLang: "it",
+    translatedExcerpt: `Wearing the gold tracksuit,\nwalking through the streets at night.\nI'm thinking of you,\nbut you're already far away.\nIn my neighbourhood everything is the same,\nbut I've changed, I know it.\nI look at myself in the mirror and I see a stranger.`,
+    originalExcerpt: `Con la tuta gold\ncammino per i vicoli di notte.\nPenso a te\nma sei già lontana.\nNel mio quartiere tutto è uguale,\nma io sono cambiato, lo so.\nMi guardo allo specchio e vedo uno straniero.`,
+    wrongOptions: ["Brividi", "Barrio", "Soldi"]
+  },
+  {
+    id: 9,
+    title: "Sinceramente",
+    artist: "Annalisa",
+    originalLang: "it",
+    translatedExcerpt: `Sincerely,\nI'm done pretending.\nI finally know what I want\nand I don't want to lose it.\nI throw away the old me,\nI'm a new person now.\nSincerely, I feel free.`,
+    originalExcerpt: `Sinceramente\nnon ho voglia di fingere.\nFinalmente so quello che voglio\ne non voglio perderlo.\nButto via la vecchia me,\nora sono una persona nuova.\nSinceramente, mi sento libera.`,
+    wrongOptions: ["Mon Amour", "Bellissima", "Tsunami"]
+  },
+  {
+    id: 10,
+    title: "Supereroi",
+    artist: "Mr. Rain",
+    originalLang: "it",
+    translatedExcerpt: `We are superheroes\neven when we fall apart.\nWe fight every day\nagainst our own fears.\nYou hold my hand\nand we fly above the clouds.\nWe are superheroes,\nwe are stronger than we think.`,
+    originalExcerpt: `Siamo supereroi\nanche quando andiamo a pezzi.\nCombattiamo ogni giorno\ncontro le nostre paure.\nMi tieni per mano\ne voliamo sopra le nuvole.\nSiamo supereroi,\nsiamo più forti di quanto pensiamo.`,
+    wrongOptions: ["Fiori di Chernobyl", "Stelle Cadenti", "Un Milione di Cose Da Dirti"]
+  }
+];
+
+// ══════════════════════════════════════════════
+//  GAME STATE
+// ══════════════════════════════════════════════
+let songs = [];
+let currentIndex = 0;
+let score = 0;
+let correctCount = 0;
+let firstTryCount = 0;
+let wrongCount = 0;
+let timerInterval = null;
+let timeLeft = 15;
+let phase = 'input'; // 'input' | 'choice' | 'done'
+let answeredFirstTry = false;
+const TIMER_DURATION = 15;
+const CHOICE_TIMER = 12;
+const MAX_POINTS_FIRST = 3;
+const MAX_POINTS_CHOICE = 1;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ── Fuzzy match for song title ──
+function normalize(str) {
+  return str.toLowerCase()
+    .replace(/[àáâã]/g,'a').replace(/[èéê]/g,'e')
+    .replace(/[ìíî]/g,'i').replace(/[òóô]/g,'o')
+    .replace(/[ùúû]/g,'u')
+    .replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
+}
+
+function titleMatch(guess, title) {
+  const g = normalize(guess);
+  const t = normalize(title);
+  if (!g) return false;
+  if (t === g) return true;
+  if (t.includes(g) && g.length >= 4) return true;
+  // word overlap
+  const gWords = g.split(' ').filter(w => w.length > 2);
+  const tWords = t.split(' ');
+  const matches = gWords.filter(w => tWords.some(tw => tw.includes(w) || w.includes(tw)));
+  return matches.length > 0 && matches.length >= Math.min(gWords.length, tWords.length) * 0.6;
+}
+
+// ══════════════════════════════════════════════
+//  START / RESTART
+// ══════════════════════════════════════════════
+function startGame() {
+  songs = shuffle(ALL_SONGS);
+  currentIndex = 0; score = 0; correctCount = 0; firstTryCount = 0; wrongCount = 0;
+  showScreen('game-screen');
+  loadQuestion();
+}
+
+function restartGame() {
+  startGame();
+}
+
+// ══════════════════════════════════════════════
+//  LOAD QUESTION
+// ══════════════════════════════════════════════
+function loadQuestion() {
+  const song = songs[currentIndex];
+  phase = 'input';
+  answeredFirstTry = true;
+
+  // Header
+  document.getElementById('score-display').textContent = score;
+  document.getElementById('q-num').textContent = currentIndex + 1;
+  document.getElementById('q-total').textContent = songs.length;
+  const pct = ((currentIndex) / songs.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // Lyrics
+  document.getElementById('lyrics-display').innerHTML = song.translatedExcerpt.replace(/\n/g, '<br>');
+
+  // Direction label
+  if (song.originalLang === 'en') {
+    document.getElementById('lang-flag').textContent = '🇬🇧';
+    document.getElementById('direction-label').textContent = 'Canzone in Inglese – tradotta in Italiano – Indovina il titolo!';
+  } else {
+    document.getElementById('lang-flag').textContent = '🇮🇹';
+    document.getElementById('direction-label').textContent = 'Canzone Italiana – tradotta in Inglese – Indovina il titolo!';
+  }
+
+  // Reset UI
+  document.getElementById('input-phase').style.display = 'block';
+  document.getElementById('choice-phase').style.display = 'none';
+  document.getElementById('result-section').style.display = 'none';
+  document.getElementById('guess-input').value = '';
+  document.getElementById('guess-input').disabled = false;
+  document.getElementById('hint-text').textContent = `⏳ Hai ${TIMER_DURATION} secondi – poi appaiono 3 opzioni!`;
+  document.getElementById('timer-message').innerHTML = `<strong>Scrivi il titolo</strong> nel campo qui sotto!`;
+
+  // Reset timer circle
+  setTimerCircle(TIMER_DURATION, TIMER_DURATION, 'cyan');
+
+  // Focus input
+  setTimeout(() => document.getElementById('guess-input').focus(), 100);
+
+  // Start timer
+  timeLeft = TIMER_DURATION;
+  clearInterval(timerInterval);
+  timerInterval = setInterval(tickInputTimer, 1000);
+
+  // Enter key
+  document.getElementById('guess-input').onkeydown = function(e) {
+    if (e.key === 'Enter') checkGuess();
+  };
+}
+
+function tickInputTimer() {
+  timeLeft--;
+  document.getElementById('timer-number').textContent = timeLeft;
+  setTimerCircle(timeLeft, TIMER_DURATION, timeLeft <= 5 ? 'pink' : 'cyan');
+  if (timeLeft <= 0) {
+    clearInterval(timerInterval);
+    answeredFirstTry = false;
+    showChoices();
+  }
+}
+
+function setTimerCircle(val, max, color) {
+  const circumference = 132;
+  const offset = circumference - (val / max) * circumference;
+  const circle = document.getElementById('timer-progress-circle');
+  circle.style.strokeDashoffset = offset;
+  circle.style.stroke = color === 'pink' ? 'var(--neon-pink)' : 'var(--neon-cyan)';
+  document.getElementById('timer-number').textContent = Math.max(0, val);
+  document.getElementById('timer-number').style.color = color === 'pink' ? 'var(--neon-pink)' : 'var(--text)';
+}
+
+// ══════════════════════════════════════════════
+//  CHECK TYPED GUESS
+// ══════════════════════════════════════════════
+function checkGuess() {
+  if (phase !== 'input') return;
+  const song = songs[currentIndex];
+  const guess = document.getElementById('guess-input').value;
+  if (!guess.trim()) return;
+  if (titleMatch(guess, song.title)) {
+    clearInterval(timerInterval);
+    phase = 'done';
+    const pts = answeredFirstTry ? MAX_POINTS_FIRST : MAX_POINTS_CHOICE;
+    score += pts;
+    correctCount++;
+    if (answeredFirstTry) firstTryCount++;
+    showResult(true, pts);
+  } else {
+    // Wrong typed answer - shake input
+    const inp = document.getElementById('guess-input');
+    inp.style.borderColor = 'var(--neon-pink)';
+    inp.style.animation = 'none';
+    setTimeout(() => { inp.style.borderColor = ''; }, 800);
+    answeredFirstTry = false;
+    document.getElementById('hint-text').textContent = '❌ Non è giusto! Riprova o aspetta le opzioni…';
+  }
+}
+
+// ══════════════════════════════════════════════
+//  SHOW MULTIPLE CHOICE
+// ══════════════════════════════════════════════
+function showChoices() {
+  phase = 'choice';
+  const song = songs[currentIndex];
+  document.getElementById('input-phase').style.display = 'none';
+  document.getElementById('choice-phase').style.display = 'block';
+  document.getElementById('timer-message').innerHTML = `<strong>Scegli una risposta!</strong>`;
+
+  // Build options
+  const options = shuffle([song.title, ...song.wrongOptions.slice(0, 2)]);
+  const grid = document.getElementById('choices-grid');
+  grid.innerHTML = '';
+  const letters = ['A', 'B', 'C'];
+
+  options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.innerHTML = `<span class="choice-letter">${letters[i]}</span>${opt}`;
+    btn.onclick = () => selectChoice(opt, song.title, btn, options, letters);
+    grid.appendChild(btn);
+  });
+
+  // Choice timer
+  timeLeft = CHOICE_TIMER;
+  setTimerCircle(CHOICE_TIMER, CHOICE_TIMER, 'cyan');
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    setTimerCircle(timeLeft, CHOICE_TIMER, timeLeft <= 4 ? 'pink' : 'cyan');
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      autoSelectWrong(song.title);
+    }
+  }, 1000);
+}
+
+function selectChoice(chosen, correct, clickedBtn, options, letters) {
+  if (phase !== 'choice') return;
+  clearInterval(timerInterval);
+  phase = 'done';
+
+  const allBtns = document.querySelectorAll('.choice-btn');
+  allBtns.forEach(btn => {
+    btn.disabled = true;
+    const txt = btn.textContent.trim().substring(1).trim(); // skip letter
+    if (txt === correct) btn.classList.add('correct');
+    else if (btn === clickedBtn && chosen !== correct) btn.classList.add('wrong');
+  });
+
+  if (chosen === correct) {
+    score += MAX_POINTS_CHOICE;
+    correctCount++;
+    showResult(true, MAX_POINTS_CHOICE);
+  } else {
+    wrongCount++;
+    showResult(false, 0);
+  }
+}
+
+function autoSelectWrong(correct) {
+  if (phase !== 'choice') return;
+  phase = 'done';
+  const allBtns = document.querySelectorAll('.choice-btn');
+  allBtns.forEach(btn => {
+    btn.disabled = true;
+    const txt = btn.textContent.trim().substring(1).trim();
+    if (txt === correct) btn.classList.add('correct');
+  });
+  wrongCount++;
+  showResult(false, 0);
+}
+
+// ══════════════════════════════════════════════
+//  SHOW RESULT
+// ══════════════════════════════════════════════
+function showResult(isCorrect, pts) {
+  const song = songs[currentIndex];
+  document.getElementById('result-section').style.display = 'block';
+  document.getElementById('score-display').textContent = score;
+
+  const banner = document.getElementById('result-banner');
+  const emoji = document.getElementById('result-emoji');
+  const resultText = document.getElementById('result-text');
+
+  if (isCorrect) {
+    banner.className = 'result-banner correct';
+    emoji.textContent = pts >= MAX_POINTS_FIRST ? '🎉' : '✅';
+    resultText.textContent = pts >= MAX_POINTS_FIRST
+      ? `CORRETTO! +${pts} punti ⚡`
+      : `CORRETTO! +${pts} punto`;
+    launchConfetti();
+  } else {
+    banner.className = 'result-banner wrong';
+    emoji.textContent = '😬';
+    resultText.textContent = 'Peccato! Questa volta no…';
+  }
+
+  // Song info
+  document.getElementById('reveal-title').textContent = song.title;
+  document.getElementById('reveal-artist').textContent = '🎤 ' + song.artist;
+  document.getElementById('reveal-lang').textContent =
+    song.originalLang === 'en' ? '🇬🇧 Canzone Inglese' : '🇮🇹 Canzone Italiana';
+  document.getElementById('original-lyrics-display').innerHTML =
+    song.originalExcerpt.replace(/\n/g, '<br>');
+
+  // Next button
+  const isLast = currentIndex === songs.length - 1;
+  document.getElementById('btn-next').textContent = isLast ? 'VEDI I RISULTATI 🏆' : 'PROSSIMA CANZONE →';
+}
+
+// ══════════════════════════════════════════════
+//  NEXT QUESTION
+// ══════════════════════════════════════════════
+function nextQuestion() {
+  currentIndex++;
+  if (currentIndex >= songs.length) {
+    showEndScreen();
+  } else {
+    document.getElementById('result-section').style.display = 'none';
+    document.getElementById('choice-phase').style.display = 'none';
+    document.getElementById('input-phase').style.display = 'block';
+    loadQuestion();
+  }
+}
+
+// ══════════════════════════════════════════════
+//  END SCREEN
+// ══════════════════════════════════════════════
+function showEndScreen() {
+  showScreen('end-screen');
+  const maxScore = songs.length * MAX_POINTS_FIRST;
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('final-max').textContent = `su ${maxScore} punti massimi`;
+  document.getElementById('stat-correct').textContent = correctCount;
+  document.getElementById('stat-first').textContent = firstTryCount;
+  document.getElementById('stat-wrong').textContent = wrongCount;
+
+  const pct = score / maxScore;
+  let stars, msg;
+  if (pct >= .9) { stars = '⭐⭐⭐'; msg = '🎤 Sei un vero intenditore di musica!'; }
+  else if (pct >= .65) { stars = '⭐⭐'; msg = '🎵 Molto bene! Ascolti tanta musica!'; }
+  else if (pct >= .4) { stars = '⭐'; msg = '👏 Non male! Ascolta più musica!'; }
+  else { stars = '🔇'; msg = '😄 La prossima volta andrà meglio!'; }
+  document.getElementById('end-stars').textContent = stars;
+  document.getElementById('end-message').textContent = msg;
+
+  setTimeout(launchConfetti, 300);
+}
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function launchConfetti() {
+  const colors = ['#ff2d78','#00f5d4','#ffe600','#b347ff','#fff'];
+  for (let i = 0; i < 40; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left: ${Math.random()*100}vw;
+      top: -20px;
+      background: ${colors[Math.floor(Math.random()*colors.length)]};
+      transform: rotate(${Math.random()*360}deg);
+      animation: fall ${1.5 + Math.random()*2}s ease-in forwards;
+      animation-delay: ${Math.random()*.8}s;
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+}
+
+// Confetti fall keyframe via JS
+const styleEl = document.createElement('style');
+styleEl.textContent = `
+@keyframes fall {
+  to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}`;
+document.head.appendChild(styleEl);
+</script>
+</body>
+</html>
