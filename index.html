@@ -417,6 +417,66 @@
     font-style: italic;
   }
 
+  .spotify-wrap {
+    margin-bottom: 16px;
+  }
+  .spotify-btn {
+    display: flex; align-items: center; gap: 12px;
+    background: #1DB954;
+    border: none; border-radius: 50px;
+    padding: 13px 24px;
+    color: #000;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px;
+    cursor: pointer; text-decoration: none;
+    width: fit-content;
+    transition: transform .15s, box-shadow .15s;
+    box-shadow: 0 0 20px rgba(29,185,84,.35);
+  }
+  .spotify-btn:hover { transform: scale(1.04); box-shadow: 0 0 30px rgba(29,185,84,.55); }
+  .spotify-btn svg { flex-shrink: 0; }
+  .spotify-missing {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .media-links {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .media-btn {
+    display: flex; align-items: center; gap: 10px;
+    border: none; border-radius: 50px;
+    padding: 12px 22px;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px;
+    cursor: pointer; text-decoration: none;
+    transition: transform .15s, box-shadow .15s;
+    flex: 1; min-width: 140px; justify-content: center;
+  }
+  .media-btn svg { flex-shrink: 0; }
+  .media-btn.spotify {
+    background: #1DB954; color: #000;
+    box-shadow: 0 0 18px rgba(29,185,84,.35);
+  }
+  .media-btn.spotify:hover { transform: scale(1.04); box-shadow: 0 0 28px rgba(29,185,84,.55); }
+  .media-btn.youtube {
+    background: #FF0000; color: #fff;
+    box-shadow: 0 0 18px rgba(255,0,0,.3);
+  }
+  .media-btn.youtube:hover { transform: scale(1.04); box-shadow: 0 0 28px rgba(255,0,0,.5); }
+  .media-btn.disabled {
+    background: var(--surface); color: var(--text-muted);
+    border: 1px dashed var(--border);
+    box-shadow: none; cursor: default; opacity: .6;
+  }
+  .media-btn.disabled:hover { transform: none; }
+
   .btn-next {
     width: 100%;
     background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
@@ -640,6 +700,8 @@
         <div class="original-lyrics" id="original-lyrics-display">–</div>
       </div>
 
+      <div id="media-player"></div>
+
       <button class="btn-next" id="btn-next" onclick="nextQuestion()">PROSSIMA CANZONE →</button>
     </div>
 
@@ -684,6 +746,8 @@ const ALL_SONGS = [
     id: 1,
     title: "Flowers",
     artist: "Miley Cyrus",
+    spotifyId: "",
+    youtubeId: "",
     originalLang: "en",
     translatedExcerpt: `Posso comprarmi dei fiori,\nscrivere il mio nome sulla sabbia.\nPosso parlare con me stessa per ore,\ndire cose che non capisci.\nPosso portarmi in giro,\nnon ho bisogno di te.\nPosso amarmi meglio di quanto tu abbia mai fatto.`,
     originalExcerpt: `I can buy myself flowers,\nwrite my name in the sand.\nTalk to myself for hours,\nsay things you don't understand.\nI can take myself dancing\nand I can hold my own hand.\nYeah, I can love me better than you can.`,
@@ -693,6 +757,8 @@ const ALL_SONGS = [
     id: 2,
     title: "Anti-Hero",
     artist: "Taylor Swift",
+    spotifyId: "",
+    youtubeId: "",
     originalLang: "en",
     translatedExcerpt: `Ciao, sono io.\nSono il problema, sono io.\nAll'ora del tè tutti concordano:\ndevo essere il problema.\nÈ colpa mia, sì, sono io.\nSono l'eroe negativo.`,
     originalExcerpt: `It's me, hi!\nI'm the problem, it's me.\nAt tea time everybody agrees,\nI'll stare directly at the sun but never in the mirror.\nIt's me, hi, I'm the problem, it's me.`,
@@ -702,6 +768,8 @@ const ALL_SONGS = [
     id: 3,
     title: "As It Was",
     artist: "Harry Styles",
+    spotifyId: "4Dvkj6JhhA12EX05fT7y2e",
+    youtubeId: "",
     originalLang: "en",
     translatedExcerpt: `Mi trattieni,\nla gravità mi trattiene.\nVoglio che tu stenda il palmo della mano —\nperché non la lasciamo lì?\nNiente da dire\nquando tutto si mette in mezzo.\nSembra che tu non possa essere sostituita\ne sono io quello che resterà.`,
     originalExcerpt: `Holdin' me back,\ngravity's holdin' me back.\nI want you to hold out the palm of your hand,\nwhy don't we leave it at that?\nNothin' to say\nwhen everything gets in the way.\nSeems you cannot be replaced\nand I'm the one who will stay, oh-oh-oh.`,
@@ -711,6 +779,8 @@ const ALL_SONGS = [
     id: 4,
     title: "Blinding Lights",
     artist: "The Weeknd",
+    spotifyId: "",
+    youtubeId: "",
     originalLang: "en",
     translatedExcerpt: `Sto cercando di chiamarti\nma le luci abbaglianti della città mi accecano.\nNon riesco a dormire stanotte,\nho bisogno di te vicino a me.\nCorro verso di te come un matto.\nSon senza di te, senza di te.`,
     originalExcerpt: `I've been trying to call\nI've been on my own for long enough.\nMaybe you can show me how to love, maybe.\nI'm going through withdrawals.\nYou don't even have to do too much,\nyou can turn me on with just a touch, baby.`,
@@ -720,6 +790,8 @@ const ALL_SONGS = [
     id: 5,
     title: "Levitating",
     artist: "Dua Lipa",
+    spotifyId: "",
+    youtubeId: "",
     originalLang: "en",
     translatedExcerpt: `Se vuoi che resti per sempre,\nfammi sapere, fammi sapere.\nVa' a prendere la mia mano\ne non lasciarla mai andare.\nSto levitando in aria,\ncon te sono nell'universo.`,
     originalExcerpt: `If you wanna run away with me,\nI know a galaxy and I can take you for a ride.\nI had a premonition that we fell into a rhythm\nwhere the music don't stop for life.`,
@@ -729,6 +801,8 @@ const ALL_SONGS = [
     id: 6,
     title: "Cruel Summer",
     artist: "Taylor Swift",
+    spotifyId: "",
+    youtubeId: "",
     originalLang: "en",
     translatedExcerpt: `Fever dream alta, non riesci a sopportare\nte ne resti in attesa di un amore che non arriva.\nÈ crudele un'estate stare senza di te.\nUrlo il tuo nome nel vuoto e spero che mi senta.`,
     originalExcerpt: `Fever dream high in the quiet of the night,\nyou know that I caught it.\n(Oh I caught it)\nBad, bad boy, shiny toy with a price,\nyou know that I bought it.\nIt's a cruel summer with you.`,
@@ -740,6 +814,8 @@ const ALL_SONGS = [
     id: 7,
     title: "Brividi",
     artist: "Mahmood & Blanco",
+    spotifyId: "",
+    youtubeId: "",
     originalLang: "it",
     translatedExcerpt: `I'm afraid of loving you\nbecause maybe I'm wrong.\nGive me a shiver, cold as ice,\na shiver that brings you back.\nI'm not able to love you,\nI'm not strong enough for this.\nI stay with you even in the dark.`,
     originalExcerpt: `Ho paura di amare te\nperché magari sbaglio.\nDammi un brivido, freddo come il ghiaccio,\nun brivido che mi riporti da te.\nNon so amarti senza perdermi,\nnon sono abbastanza forte.\nResto con te anche nel buio.`,
@@ -749,6 +825,8 @@ const ALL_SONGS = [
     id: 8,
     title: "Tuta Gold",
     artist: "Mahmood",
+    spotifyId: "",
+    youtubeId: "",
     originalLang: "it",
     translatedExcerpt: `Wearing the gold tracksuit,\nwalking through the streets at night.\nI'm thinking of you,\nbut you're already far away.\nIn my neighbourhood everything is the same,\nbut I've changed, I know it.\nI look at myself in the mirror and I see a stranger.`,
     originalExcerpt: `Con la tuta gold\ncammino per i vicoli di notte.\nPenso a te\nma sei già lontana.\nNel mio quartiere tutto è uguale,\nma io sono cambiato, lo so.\nMi guardo allo specchio e vedo uno straniero.`,
@@ -758,6 +836,8 @@ const ALL_SONGS = [
     id: 9,
     title: "Sinceramente",
     artist: "Annalisa",
+    spotifyId: "",
+    youtubeId: "",
     originalLang: "it",
     translatedExcerpt: `Sincerely,\nI'm done pretending.\nI finally know what I want\nand I don't want to lose it.\nI throw away the old me,\nI'm a new person now.\nSincerely, I feel free.`,
     originalExcerpt: `Sinceramente\nnon ho voglia di fingere.\nFinalmente so quello che voglio\ne non voglio perderlo.\nButto via la vecchia me,\nora sono una persona nuova.\nSinceramente, mi sento libera.`,
@@ -767,6 +847,8 @@ const ALL_SONGS = [
     id: 10,
     title: "Supereroi",
     artist: "Mr. Rain",
+    spotifyId: "",
+    youtubeId: "",
     originalLang: "it",
     translatedExcerpt: `We are superheroes\neven when we fall apart.\nWe fight every day\nagainst our own fears.\nYou hold my hand\nand we fly above the clouds.\nWe are superheroes,\nwe are stronger than we think.`,
     originalExcerpt: `Siamo supereroi\nanche quando andiamo a pezzi.\nCombattiamo ogni giorno\ncontro le nostre paure.\nMi tieni per mano\ne voliamo sopra le nuvole.\nSiamo supereroi,\nsiamo più forti di quanto pensiamo.`,
@@ -778,6 +860,8 @@ const ALL_SONGS = [
     id: 11,
     title: "Do I Wanna Know?",
     artist: "Arctic Monkeys",
+    spotifyId: "",
+    youtubeId: "",
     originalLang: "en",
     translatedExcerpt: `Ho avuto sogni così lenti\nche spero tu non riesca a spiegarli.\nSarà sempre solo un caso\nche mi metti le parole in bocca?\nTi chiedo solo: voglio davvero sapere\nse hai già un posto in testa a qualcun altro?\nVoglio davvero sapere.`,
     originalExcerpt: `Have you got colour in your cheeks?\nDo you ever get the feeling that you can't shift the tide\nthat sticks around like something's in your teeth?\nAre there some aces up your sleeve?\nHave you no idea that you're in deep?\nI dreamt about you nearly every night this week.`,
@@ -787,6 +871,8 @@ const ALL_SONGS = [
     id: 12,
     title: "Where Have You Been",
     artist: "Rihanna",
+    spotifyId: "",
+    youtubeId: "",
     originalLang: "en",
     translatedExcerpt: `Ti ho cercato dappertutto,\nma non riuscivo a trovarti.\nHo bisogno di qualcuno che mi faccia sentire viva.\nTi ho cercato sotto la pioggia e nel sole,\nma tu non eri da nessuna parte.\nDove sei stato tutta la mia vita?`,
     originalExcerpt: `I've been everywhere, man,\nlooking for someone,\nsomeone who can please me,\nlove me all night long.\nI've been everywhere, man,\nlooking for you, babe,\nlooking for you, babe,\nsearching for you, babe.`,
@@ -796,6 +882,8 @@ const ALL_SONGS = [
     id: 13,
     title: "Baby",
     artist: "Justin Bieber ft. Ludacris",
+    spotifyId: "",
+    youtubeId: "",
     originalLang: "en",
     translatedExcerpt: `Tesoro, tesoro, tesoro,\noh!\nPensavo di non poterti dimenticare mai,\nbambina, bambina, bambina.\nOh, e sono come,\nbambina, bambina, bambina.\nNo, pensavo di sapere sempre l'amore\nma ora guardo indietro e so che non ero pronto.`,
     originalExcerpt: `Baby, baby, baby, oh!\nLike baby, baby, baby, no!\nLike baby, baby, baby, oh!\nI thought you'd always be mine, mine.\nBaby, baby, baby, oh!\nLike baby, baby, baby, no!\nLike baby, baby, baby, oh!\nI thought you'd always be mine.`,
@@ -805,6 +893,8 @@ const ALL_SONGS = [
     id: 14,
     title: "White Keys",
     artist: "Dominic Fike",
+    spotifyId: "5ViLKrbyL3HD6wsq3AB9eI",
+    youtubeId: "",
     originalLang: "en",
     translatedExcerpt: `Va beh', Chevy nera d'epoca, avevo 17 anni,\nnon avevo niente se non qualche maglietta e un paio di jeans.`,
     originalExcerpt: `A'ight, pitch black Chevy antique, I was 17,\nI ain't have nothing but some Tees and a pair of jeans.`,
@@ -814,6 +904,8 @@ const ALL_SONGS = [
     id: 15,
     title: "wildflower",
     artist: "Billie Eilish",
+    spotifyId: "",
+    youtubeId: "",
     originalLang: "en",
     translatedExcerpt: `Ti vedo con lei\ne mi chiedo se le parli come parlavi a me.\nSpero che non le dica le stesse cose,\nspero che non la guardi allo stesso modo.\nEro un fiore selvatico nel tuo giardino,\nma tu hai scelto lei.\nE ora guardo da fuori.`,
     originalExcerpt: `I was supposed to be your punk,\nyour wild one.\nNow I see you with her\nand I don't know what I feel.\nI hope she knows you found\nthe courage to love her\nthe way you never could love me.`,
@@ -823,6 +915,8 @@ const ALL_SONGS = [
     id: 16,
     title: "Go Away",
     artist: "Lukas Graham",
+    spotifyId: "",
+    youtubeId: "",
     originalLang: "en",
     translatedExcerpt: `Non ho bisogno di te qui stasera,\nvattene, vattene.\nSo già di cosa hai bisogno,\nnon sono quello giusto per te.\nMi fai del male ogni volta che resti,\nquindi vattene, vattene via.\nNon guardare indietro.`,
     originalExcerpt: `Go away, go away,\nI don't need you here tonight.\nGo away, go away,\nyou know I'll be alright.\nI know what you need,\nbut I'm not the one to give it.\nYou're hurting me every time you stay,\nso go away.`,
@@ -832,6 +926,8 @@ const ALL_SONGS = [
     id: 17,
     title: "Vai!",
     artist: "Alfa",
+    spotifyId: "",
+    youtubeId: "",
     originalLang: "it",
     translatedExcerpt: `Go, go, don't think about it,\njust go and don't look back.\nYou've always been brave,\neven when you pretended not to be.\nGo, go, this city\ncan't hold you anymore.\nYou were made for something bigger,\nnow just go.`,
     originalExcerpt: `Vai, vai, non pensarci,\nvai e non voltarti.\nSei sempre stato coraggioso,\nanche quando fingevi di no.\nVai, vai, questa città\nnon ti contiene più.\nEri fatto per qualcosa di più grande,\nora vai.`,
@@ -1108,6 +1204,30 @@ function showResult(isCorrect, pts) {
     song.originalLang === 'en' ? '🇬🇧 Canzone Inglese' : '🇮🇹 Canzone Italiana';
   document.getElementById('original-lyrics-display').innerHTML =
     song.originalExcerpt.replace(/\n/g, '<br>');
+
+  // Media links (Spotify + YouTube)
+  const mediaPlayer = document.getElementById('media-player');
+  const spotifyBtn = song.spotifyId
+    ? `<a class="media-btn spotify" href="https://open.spotify.com/track/${song.spotifyId}" target="_blank" rel="noopener">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#000"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        Ascolta su Spotify
+      </a>`
+    : `<span class="media-btn disabled">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" opacity=".4"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        Spotify — aggiungi ID
+      </span>`;
+
+  const youtubeBtn = song.youtubeId
+    ? `<a class="media-btn youtube" href="https://www.youtube.com/watch?v=${song.youtubeId}" target="_blank" rel="noopener">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        Guarda su YouTube
+      </a>`
+    : `<span class="media-btn disabled">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" opacity=".4"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        YouTube — aggiungi ID
+      </span>`;
+
+  mediaPlayer.innerHTML = `<div class="media-links">${spotifyBtn}${youtubeBtn}</div>`;
 
   // Next button
   const isLast = currentIndex === songs.length - 1;
